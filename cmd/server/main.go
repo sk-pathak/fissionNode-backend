@@ -40,6 +40,10 @@ func main() {
 	userService := service.NewUserService(userRepo)
 	userHandler := handler.NewUserHandler(userService)
 
+	nodeRepo := repo.NewNodeRepository(queries)
+	nodeService := service.NewNodeService(nodeRepo)
+	nodeHandler := handler.NewNodeHandler(nodeService)
+
 	store := auth.NewAuth()
 	authHandler := handler.NewAuthHandler(service.NewAuthService([]byte(cfg.SessionSecret)))
 
@@ -48,6 +52,7 @@ func main() {
 
 	routes.RegisterAuthRoutes(r, authHandler)
 	routes.RegisterUserRoutes(r, userHandler, store)
+	routes.RegisterNodeRoutes(r, nodeHandler)
 
 	log.Printf("Server is running on port %s", cfg.Port)
 	log.Fatal(r.Run(":" + cfg.Port))

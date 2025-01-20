@@ -31,13 +31,14 @@ func (r *UserRepository) GetAllUsers(ctx context.Context) ([]db.User, error) {
 	}
 
 	var result []db.User
-	for _, u := range users {
+	for _, user := range users {
 		result = append(result, db.User{
-			ID:       u.ID,
-			Name:     u.Name,
-			Email:    u.Email,
-			Username: u.Username,
-			Password: u.Password,
+			ID:        user.ID,
+			Name:      user.Name,
+			Email:     user.Email,
+			Username:  user.Username,
+			Password:  user.Password,
+			CreatedAt: user.CreatedAt,
 		})
 	}
 
@@ -51,11 +52,12 @@ func (r *UserRepository) GetUser(ctx context.Context, id int64) (db.User, error)
 	}
 
 	result := db.User{
-		ID:       user.ID,
-		Name:     user.Name,
-		Email:    user.Email,
-		Username: user.Username,
-		Password: user.Password,
+		ID:        user.ID,
+		Name:      user.Name,
+		Email:     user.Email,
+		Username:  user.Username,
+		Password:  user.Password,
+		CreatedAt: user.CreatedAt,
 	}
 
 	return result, nil

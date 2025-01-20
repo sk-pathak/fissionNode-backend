@@ -18,7 +18,7 @@ func NewUserService(repo *repository.UserRepository) *UserService {
 
 func (s *UserService) CreateUser(ctx context.Context, user *db.User) error {
 	_, err := s.repo.GetUser(ctx, user.ID)
-	if err == nil {
+	if err != nil {
 		return errors.New("user already exists")
 	}
 

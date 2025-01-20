@@ -1,13 +1,13 @@
 #!/bin/bash
 
 usage() {
-    echo "Usage: $0 <migration_name>"
+    echo "Usage: $0 name=<migration_name>"
     echo
     echo "Arguments:"
     echo "  migration_name   The name of the migration to create."
     echo
     echo "Example:"
-    echo "  $0 add_users_table"
+    echo "  $0 name=add_users_table"
     exit 1
 }
 

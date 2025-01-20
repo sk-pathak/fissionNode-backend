@@ -2,7 +2,7 @@ services:
   db:
     image: postgres:latest
     environment:
-      POSTGRES_DB: go-database
+      POSTGRES_DB: fission_node
       POSTGRES_USER: sumit_pathak
       POSTGRES_PASSWORD: /run/secrets/db_password
     ports:
@@ -21,7 +21,7 @@ services:
       DB_PORT: 5432
       DB_USER: sumit_pathak
       DB_PASSWORD: /run/secrets/db_password
-      DB_NAME: go-database
+      DB_NAME: fission_node
     ports:
       - "8080:8080"
     env_file:

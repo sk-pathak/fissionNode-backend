@@ -4,10 +4,42 @@
 
 package db
 
+import (
+	"github.com/jackc/pgx/v5/pgtype"
+)
+
+type Node struct {
+	ID            int64
+	NodeName      string
+	IpAddress     string
+	Capacity      []byte
+	Status        string
+	LastHeartbeat pgtype.Timestamp
+}
+
+type NodeHealthLog struct {
+	ID          int64
+	NodeID      int64
+	CpuUsage    float64
+	MemoryUsage float64
+	CreatedAt   pgtype.Timestamp
+}
+
+type Service struct {
+	ID        int64
+	UserID    int64
+	NodeID    int64
+	Image     string
+	Status    string
+	PublicUrl pgtype.Text
+	CreatedAt pgtype.Timestamp
+}
+
 type User struct {
-	ID       int64
-	Name     string
-	Email    string
-	Username string
-	Password string
+	ID        int64
+	Username  string
+	Email     string
+	Password  string
+	CreatedAt pgtype.Timestamp
+	Name      string
 }

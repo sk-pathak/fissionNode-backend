@@ -7,10 +7,12 @@ package db
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (name, email, username, password) VALUES ($1, $2, $3, $4) RETURNING id, name, email, username, password
+INSERT INTO users (name, email, username, password) VALUES ($1, $2, $3, $4) RETURNING id, username, email, password, created_at, name
 `
 
 type CreateUserParams struct {
@@ -30,16 +32,35 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	var i User
 	err := row.Scan(
 		&i.ID,
-		&i.Name,
-		&i.Email,
 		&i.Username,
+		&i.Email,
 		&i.Password,
+		&i.CreatedAt,
+		&i.Name,
 	)
 	return i, err
 }
 
+const deleteNode = `-- name: DeleteNode :exec
+DELETE FROM nodes WHERE id = $1 RETURNING id, node_name, ip_address, capacity, status, last_heartbeat
+`
+
+func (q *Queries) DeleteNode(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, deleteNode, id)
+	return err
+}
+
+const deleteService = `-- name: DeleteService :exec
+DELETE FROM services WHERE id = $1 RETURNING id, user_id, node_id, image, status, public_url, created_at
+`
+
+func (q *Queries) DeleteService(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, deleteService, id)
+	return err
+}
+
 const deleteUser = `-- name: DeleteUser :exec
-DELETE FROM users WHERE id = $1 RETURNING id, name, email, username, password
+DELETE FROM users WHERE id = $1 RETURNING id, username, email, password, created_at, name
 `
 
 func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
@@ -47,8 +68,76 @@ func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
 	return err
 }
 
+const getNodeByID = `-- name: GetNodeByID :one
+SELECT id, node_name, ip_address, capacity, status, last_heartbeat FROM nodes WHERE id = $1
+`
+
+func (q *Queries) GetNodeByID(ctx context.Context, id int64) (Node, error) {
+	row := q.db.QueryRow(ctx, getNodeByID, id)
+	var i Node
+	err := row.Scan(
+		&i.ID,
+		&i.NodeName,
+		&i.IpAddress,
+		&i.Capacity,
+		&i.Status,
+		&i.LastHeartbeat,
+	)
+	return i, err
+}
+
+const getNodes = `-- name: GetNodes :many
+SELECT id, node_name, ip_address, capacity, status, last_heartbeat FROM nodes
+`
+
+func (q *Queries) GetNodes(ctx context.Context) ([]Node, error) {
+	rows, err := q.db.Query(ctx, getNodes)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Node
+	for rows.Next() {
+		var i Node
+		if err := rows.Scan(
+			&i.ID,
+			&i.NodeName,
+			&i.IpAddress,
+			&i.Capacity,
+			&i.Status,
+			&i.LastHeartbeat,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getServiceByID = `-- name: GetServiceByID :one
+SELECT id, user_id, node_id, image, status, public_url, created_at FROM services WHERE id = $1
+`
+
+func (q *Queries) GetServiceByID(ctx context.Context, id int64) (Service, error) {
+	row := q.db.QueryRow(ctx, getServiceByID, id)
+	var i Service
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.NodeID,
+		&i.Image,
+		&i.Status,
+		&i.PublicUrl,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, name, email, username, password FROM users WHERE id = $1
+SELECT id, username, email, password, created_at, name FROM users WHERE id = $1
 `
 
 func (q *Queries) GetUserByID(ctx context.Context, id int64) (User, error) {
@@ -56,16 +145,49 @@ func (q *Queries) GetUserByID(ctx context.Context, id int64) (User, error) {
 	var i User
 	err := row.Scan(
 		&i.ID,
-		&i.Name,
-		&i.Email,
 		&i.Username,
+		&i.Email,
 		&i.Password,
+		&i.CreatedAt,
+		&i.Name,
 	)
 	return i, err
 }
 
+const getUserServices = `-- name: GetUserServices :many
+SELECT id, user_id, node_id, image, status, public_url, created_at FROM services WHERE user_id = $1
+`
+
+func (q *Queries) GetUserServices(ctx context.Context, userID int64) ([]Service, error) {
+	rows, err := q.db.Query(ctx, getUserServices, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Service
+	for rows.Next() {
+		var i Service
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.NodeID,
+			&i.Image,
+			&i.Status,
+			&i.PublicUrl,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getUsers = `-- name: GetUsers :many
-SELECT id, name, email, username, password FROM users
+SELECT id, username, email, password, created_at, name FROM users
 `
 
 func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
@@ -79,10 +201,11 @@ func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
 		var i User
 		if err := rows.Scan(
 			&i.ID,
-			&i.Name,
-			&i.Email,
 			&i.Username,
+			&i.Email,
 			&i.Password,
+			&i.CreatedAt,
+			&i.Name,
 		); err != nil {
 			return nil, err
 		}
@@ -92,4 +215,49 @@ func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const registerNode = `-- name: RegisterNode :one
+INSERT INTO nodes (node_name, ip_address, capacity, status) VALUES ($1, $2, $3, $4) RETURNING id, node_name, ip_address, capacity, status, last_heartbeat
+`
+
+type RegisterNodeParams struct {
+	NodeName  string
+	IpAddress string
+	Capacity  []byte
+	Status    string
+}
+
+func (q *Queries) RegisterNode(ctx context.Context, arg RegisterNodeParams) (Node, error) {
+	row := q.db.QueryRow(ctx, registerNode,
+		arg.NodeName,
+		arg.IpAddress,
+		arg.Capacity,
+		arg.Status,
+	)
+	var i Node
+	err := row.Scan(
+		&i.ID,
+		&i.NodeName,
+		&i.IpAddress,
+		&i.Capacity,
+		&i.Status,
+		&i.LastHeartbeat,
+	)
+	return i, err
+}
+
+const updateStatus = `-- name: UpdateStatus :exec
+UPDATE nodes SET status = $1, last_heartbeat = $2 WHERE id = $3 RETURNING id, node_name, ip_address, capacity, status, last_heartbeat
+`
+
+type UpdateStatusParams struct {
+	Status        string
+	LastHeartbeat pgtype.Timestamp
+	ID            int64
+}
+
+func (q *Queries) UpdateStatus(ctx context.Context, arg UpdateStatusParams) error {
+	_, err := q.db.Exec(ctx, updateStatus, arg.Status, arg.LastHeartbeat, arg.ID)
+	return err
 }
