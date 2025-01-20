@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: go-database
+      POSTGRES_USER: sumit_pathak
+      POSTGRES_PASSWORD: /run/secrets/db_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    secrets:
+      - db_password
+
+  go-app:
+    build: .
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: sumit_pathak
+      DB_PASSWORD: /run/secrets/db_password
+      DB_NAME: go-database
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    command: /bin/sh -c "until pg_isready --host=db --port=5432; do sleep 3; done && /bin/app/fissionNode-backend"
+    secrets:
+      - db_password
+
+
+secrets:
+  db_password:
+    file: .secrets
