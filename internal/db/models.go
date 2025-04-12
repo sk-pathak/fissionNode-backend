@@ -8,38 +8,86 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type Node struct {
-	ID            int64
-	NodeName      string
-	IpAddress     string
-	Capacity      []byte
-	Status        string
-	LastHeartbeat pgtype.Timestamp
+type ApiKey struct {
+	ID         pgtype.UUID
+	ProjectID  pgtype.UUID
+	Name       string
+	KeyHash    string
+	LastUsedAt pgtype.Timestamptz
+	ExpiresAt  pgtype.Timestamptz
+	CreatedAt  pgtype.Timestamptz
 }
 
-type NodeHealthLog struct {
-	ID          int64
-	NodeID      int64
-	CpuUsage    float64
-	MemoryUsage float64
-	CreatedAt   pgtype.Timestamp
+type AuditLog struct {
+	ID        pgtype.UUID
+	UserID    pgtype.UUID
+	ProjectID pgtype.UUID
+	Action    string
+	Details   []byte
+	CreatedAt pgtype.Timestamptz
 }
 
-type Service struct {
-	ID        int64
-	UserID    int64
-	NodeID    int64
-	Image     string
-	Status    string
-	PublicUrl pgtype.Text
-	CreatedAt pgtype.Timestamp
+type OauthConnection struct {
+	ID             pgtype.UUID
+	UserID         pgtype.UUID
+	Provider       string
+	ProviderUserID string
+	AccessToken    pgtype.Text
+	RefreshToken   pgtype.Text
+	ExpiresAt      pgtype.Timestamptz
+	CreatedAt      pgtype.Timestamptz
+}
+
+type Project struct {
+	ID          pgtype.UUID
+	UserID      pgtype.UUID
+	Name        string
+	Description pgtype.Text
+	Subdomain   pgtype.Text
+	Status      string
+	CreatedAt   pgtype.Timestamptz
+	UpdatedAt   pgtype.Timestamptz
+}
+
+type ProjectConfig struct {
+	ID                   pgtype.UUID
+	ProjectID            pgtype.UUID
+	AuthType             string
+	DatabaseType         string
+	DatabaseUrl          string
+	Port                 pgtype.Int4
+	ContainerID          pgtype.Text
+	EnvironmentVariables []byte
+	Features             []byte
+	CreatedAt            pgtype.Timestamptz
+	UpdatedAt            pgtype.Timestamptz
+}
+
+type UsageMetric struct {
+	ID            pgtype.UUID
+	ProjectID     pgtype.UUID
+	Date          pgtype.Date
+	ApiCalls      pgtype.Int4
+	DatabaseSize  pgtype.Int8
+	BandwidthUsed pgtype.Int8
+	CreatedAt     pgtype.Timestamptz
 }
 
 type User struct {
-	ID        int64
-	Username  string
-	Email     string
-	Password  string
-	CreatedAt pgtype.Timestamp
-	Name      string
+	ID            pgtype.UUID
+	Email         string
+	Name          pgtype.Text
+	PasswordHash  pgtype.Text
+	EmailVerified pgtype.Bool
+	CreatedAt     pgtype.Timestamptz
+	UpdatedAt     pgtype.Timestamptz
+}
+
+type UserAuthMethod struct {
+	ID         pgtype.UUID
+	UserID     pgtype.UUID
+	AuthType   string
+	Identifier string
+	Verified   pgtype.Bool
+	CreatedAt  pgtype.Timestamptz
 }

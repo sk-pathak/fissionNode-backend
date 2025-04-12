@@ -1,3 +1,5 @@
+-- +goose Up
+-- +goose StatementBegin
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE users (
@@ -95,3 +97,25 @@ CREATE INDEX idx_audit_logs_user_id ON audit_logs(user_id);
 CREATE INDEX idx_audit_logs_project_id ON audit_logs(project_id);
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_user_auth_methods_user_id ON user_auth_methods(user_id);
+-- +goose StatementEnd
+
+-- +goose Down
+-- +goose StatementBegin
+DROP TABLE audit_logs;
+DROP TABLE usage_metrics;
+DROP TABLE api_keys;
+DROP TABLE project_configs;
+DROP TABLE projects;
+DROP TABLE oauth_connections;
+DROP TABLE user_auth_methods;
+DROP TABLE users;
+DROP extension IF EXISTS "uuid-ossp";
+drop index if exists idx_projects_user_id;
+DROP INDEX IF EXISTS idx_project_configs_project_id;
+DROP INDEX IF EXISTS idx_api_keys_project_id;
+DROP INDEX IF EXISTS idx_usage_metrics_project_id_date;
+DROP INDEX IF EXISTS idx_audit_logs_user_id;
+DROP INDEX IF EXISTS idx_audit_logs_project_id;
+DROP INDEX IF EXISTS idx_users_email;
+DROP INDEX IF EXISTS idx_user_auth_methods_user_id;
+-- +goose StatementEnd

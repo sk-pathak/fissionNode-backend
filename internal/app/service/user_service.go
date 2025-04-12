@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/sk-pathak/fissionNode-backend/internal/app/repository"
 	"github.com/sk-pathak/fissionNode-backend/internal/db"
 )
@@ -36,10 +37,21 @@ func (s *UserService) GetAllUsers(ctx context.Context) ([]db.User, error) {
 	return users, nil
 }
 
-func (s *UserService) GetUser(ctx context.Context, id int64) (db.User, error) {
+func (s *UserService) GetUser(ctx context.Context, id pgtype.UUID) (db.User, error) {
 	user, err := s.repo.GetUser(ctx, id)
 	if err != nil {
 		return db.User{}, errors.New("failed to retrieve user from repository: " + err.Error())
 	}
 	return user, nil
+}
+
+func (s *UserService) DeleteUser(ctx context.Context, id pgtype.UUID) error {
+	_, err := s.repo.GetUser(ctx, id)
+	if err!=nil {
+		return errors.New("user doesn't exist")
+	}
+	
+	err = s.repo.DeleteUser(ctx, id)
+
+	return err
 }
